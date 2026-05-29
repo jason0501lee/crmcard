@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type {
   ContactFormValues,
@@ -41,6 +42,7 @@ export default function ContactForm({
   const [v, setV] = useState<ContactFormValues>(initial);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(null);
 
   function set<K extends keyof ContactFormValues>(k: K, val: ContactFormValues[K]) {
     setV((prev) => ({ ...prev, [k]: val }));
@@ -60,17 +62,47 @@ export default function ContactForm({
       if (mode === "new") {
         const id = await createContact(v, images ?? { front: null, back: null }, raw ?? null);
         sessionStorage.removeItem("draftContact");
-        router.replace(`/contacts/${id}`);
+        router.refresh(); // 更新列表快取
+        setSavedId(id); // 顯示成功畫面與返回按鈕
+        return;
       } else if (contactId) {
         await updateContact(contactId, v);
-        router.replace(`/contacts/${contactId}`);
+        router.refresh();
+        setSavedId(contactId);
+        return;
       }
-      router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "儲存失敗");
     } finally {
       setSaving(false);
     }
+  }
+
+  // 儲存成功畫面：提供明確的返回按鈕，不依賴自動跳轉
+  if (savedId) {
+    return (
+      <div className="space-y-5 text-center">
+        <div className="rounded-xl bg-green-50 p-8">
+          <p className="text-lg font-medium text-green-700">
+            ✅ {mode === "new" ? "名片已儲存" : "已更新"}
+          </p>
+        </div>
+        <div className="flex flex-col gap-3">
+          <Link
+            href="/contacts"
+            className="rounded-lg bg-brand py-3 font-medium text-white"
+          >
+            回名片列表
+          </Link>
+          <Link
+            href={`/contacts/${savedId}`}
+            className="rounded-lg border bg-white py-3 font-medium"
+          >
+            查看這張名片
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (
