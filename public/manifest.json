@@ -1,0 +1,13 @@
+{
+  "name": "CRM 名片",
+  "short_name": "CRM名片",
+  "description": "拍名片，AI 擷取，存進你的 CRM",
+  "start_url": "/contacts",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#2563eb",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
