@@ -49,5 +49,5 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   // 排除靜態資源與 API
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.json|icons|api/extract).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.json|icons|api).*)"],
 };

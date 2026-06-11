@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import AppHeader from "@/components/AppHeader";
+import DeleteContactButton from "@/components/DeleteContactButton";
 import type { Contact } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -38,23 +39,47 @@ export default async function ContactDetailPage({
           </p>
 
           <dl className="mt-4 space-y-2 text-sm">
-            {contact.email && <Row label="Email" value={contact.email} />}
-            {contact.website && <Row label="網站" value={contact.website} />}
-            {contact.address && <Row label="地址" value={contact.address} />}
+            {contact.email && (
+              <Row label="Email" value={contact.email} href={`mailto:${contact.email}`} />
+            )}
+            {contact.website && (
+              <Row label="網站" value={contact.website} href={normalizeUrl(contact.website)} />
+            )}
+            {contact.address && (
+              <Row
+                label="地址"
+                value={contact.address}
+                href={`https://maps.google.com/?q=${encodeURIComponent(contact.address)}`}
+              />
+            )}
             {contact.phones?.map((p) => (
-              <Row key={p.id} label={`電話 (${p.label})`} value={p.number} />
+              <Row
+                key={p.id}
+                label={`電話 (${p.label})`}
+                value={p.number}
+                href={`tel:${p.number.replace(/\s+/g, "")}`}
+              />
             ))}
             {contact.social_links?.map((s) => (
-              <Row key={s.id} label={s.platform} value={s.handle ?? s.url ?? ""} />
+              <Row
+                key={s.id}
+                label={s.platform}
+                value={s.handle ?? s.url ?? ""}
+                href={s.url ?? undefined}
+              />
             ))}
           </dl>
 
           {tags.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-2">
               {tags.map((t) => (
-                <span key={t.id} className="rounded-full bg-brand/10 px-3 py-1 text-xs text-brand">
+                <Link
+                  key={t.id}
+                  href={`/contacts?tag=${encodeURIComponent(t.name)}`}
+                  className="rounded-full bg-brand/10 px-3 py-1 text-xs text-brand"
+                >
                   {t.name}
-                </span>
+                </Link>
               ))}
             </div>
           )}
@@ -80,22 +105,52 @@ export default async function ContactDetailPage({
           </div>
         )}
 
+        {/* 一鍵存進手機通訊錄 */}
+        <a
+          href={`/api/contacts/${contact.id}/vcard`}
+          className="block rounded-lg bg-brand py-3 text-center font-medium text-white"
+        >
+          存進手機通訊錄
+        </a>
+
         <Link
           href={`/contacts/${contact.id}/edit`}
           className="block rounded-lg border bg-white py-2 text-center font-medium"
         >
           編輯
         </Link>
+
+        <DeleteContactButton id={contact.id} />
       </main>
     </div>
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({
+  label,
+  value,
+  href,
+}: {
+  label: string;
+  value: string;
+  href?: string;
+}) {
   return (
     <div className="flex gap-2">
       <dt className="w-24 shrink-0 text-gray-500">{label}</dt>
-      <dd className="break-all">{value}</dd>
+      <dd className="break-all">
+        {href ? (
+          <a href={href} className="text-brand underline-offset-2 hover:underline" target={href.startsWith("http") ? "_blank" : undefined} rel="noreferrer">
+            {value}
+          </a>
+        ) : (
+          value
+        )}
+      </dd>
     </div>
   );
+}
+
+function normalizeUrl(url: string): string {
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
 }
